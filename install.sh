@@ -22,10 +22,6 @@ echo "JAR_FILENAME: ${JAR_FILENAME}"
 echo "TRAINING: ${TRAINING}"
 echo "*******************\n\n${NC}"
 
-# NÃO GERAR CERTIFICADO - Traefik cuida disso
-# if [ -n "$HTTPS_DOMAIN" ]; then
-#   ARGS="$ARGS -cert-domain=${HTTPS_DOMAIN}"
-# fi
 
 # Verificando variáveis de banco de dados
 if [ -n "$DB_URL" ]; then
