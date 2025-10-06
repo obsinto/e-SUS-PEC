@@ -1,54 +1,69 @@
 FROM ubuntu:22.04
+
+# Definir variáveis de ambiente não interativas
 ENV DEBIAN_FRONTEND=noninteractive
 
+# Instalar pacotes básicos, configurar locales e fontes em uma camada só
 RUN apt-get update && apt-get install -y \
     locales \
-    && locale-gen "pt_BR.UTF-8" \
-    && dpkg-reconfigure --frontend=noninteractive locales \
-    && apt-get install -y \
-    wget apt-utils gnupg2 software-properties-common file libfreetype6 ntp ttf-mscorefonts-installer fontconfig
+    wget \
+    apt-utils \
+    gnupg2 \
+    software-properties-common \
+    file \
+    libfreetype6 \
+    ntp \
+    ttf-mscorefonts-installer \
+    fontconfig && \
+    locale-gen "pt_BR.UTF-8" && \
+    dpkg-reconfigure --frontend=noninteractive locales && \
+    fc-cache -fv && \
+    chmod -R 777 /usr/share/fonts/truetype/msttcorefonts && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-RUN fc-cache -fv
-RUN chmod -R 777 /usr/share/fonts/truetype/msttcorefonts
+# Instalar Java Corretto
+RUN wget -O - https://apt.corretto.aws/corretto.key | gpg --dearmor -o /usr/share/keyrings/corretto-keyring.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/corretto-keyring.gpg] https://apt.corretto.aws stable main" | tee /etc/apt/sources.list.d/corretto.list && \
+    apt-get update && apt-get install -y java-17-amazon-corretto-jdk && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-RUN wget -O - https://apt.corretto.aws/corretto.key | gpg --dearmor -o /usr/share/keyrings/corretto-keyring.gpg
-RUN echo "deb [signed-by=/usr/share/keyrings/corretto-keyring.gpg] https://apt.corretto.aws stable main" | tee /etc/apt/sources.list.d/corretto.list
-RUN apt-get update && apt-get install -y java-17-amazon-corretto-jdk
-
-RUN sed -i 's/# deb/deb/g' /etc/apt/sources.list
-
-RUN apt-get update && \
+# Habilitar repositórios comentados e instalar pacotes do sistema
+RUN sed -i 's/# deb/deb/g' /etc/apt/sources.list && \
+    apt-get update && \
     apt-get install --no-install-recommends -y \
-    dbus systemd systemd-cron rsyslog iproute2 python-is-python3 python3 python3-apt sudo bash ca-certificates && \
+    dbus \
+    systemd \
+    systemd-cron \
+    rsyslog \
+    iproute2 \
+    python-is-python3 \
+    python3 \
+    python3-apt \
+    sudo \
+    bash \
+    ca-certificates && \
     apt-get clean && \
     rm -rf /usr/share/doc/* /usr/share/man/* /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
+# Argumento apenas para o build (JAR_FILENAME); outros viram ENVs de runtime
 ARG JAR_FILENAME
-ARG HTTPS_DOMAIN
-ARG DB_URL
-ARG POSTGRES_PASS
-ARG POSTGRES_USER
 
-ENV JAR_FILENAME=${JAR_FILENAME}
-ENV DB_URL=${DB_URL}
-ENV POSTGRES_PASS=${POSTGRES_PASS}
-ENV POSTGRES_USER=${POSTGRES_USER}
-ENV HTTPS_DOMAIN=${HTTPS_DOMAIN}
-
-RUN mkdir -p /opt/e-SUS/webserver/chaves
-RUN mkdir /backups
-RUN mkdir -p /var/www/html
-
+# Definir diretórios e workdir
+RUN mkdir -p /opt/e-SUS/webserver/chaves /backups /var/www/html
 WORKDIR /var/www/html
 
-RUN if [ -f /etc/pec.config ]; then rm /etc/pec.config; fi
+# Remover config antiga se existir
+RUN rm -f /etc/pec.config
 
-RUN wget -O ${JAR_FILENAME} https://arquivos.esusab.ufsc.br/PEC/47e59632f06a1ea6/5.4.14/${JAR_FILENAME}
+# Baixar o JAR durante o build (embutido na imagem)
+RUN wget -O ${JAR_FILENAME} "https://arquivos.esusab.ufsc.br/PEC/47e59632f06a1ea6/5.4.14/${JAR_FILENAME}"
 
+# Copiar scripts
 COPY ./install.sh .
-
-
 COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+RUN chmod +x /entrypoint.sh install.sh
 
+# Entry point
 ENTRYPOINT ["/entrypoint.sh"]
