@@ -10,12 +10,10 @@ services:
       context: .
       dockerfile: Dockerfile.external-db
       args:
-        - JAR_FILENAME=${JAR_FILENAME}  # Só pro build
+        - JAR_FILENAME=${JAR_FILENAME}
     stdin_open: true
     tty: true
-    ports:
-      - "${HTTP_PORT:-80}:80"
-      - "${HTTPS_PORT:-443}:443"
+    # Remova a seção ports: — não bind no host
     environment:
       # Vars de runtime limpas (sem duplicatas)
       - SERVICE_FQDN_PEC=${SERVICE_FQDN_PEC}
@@ -32,3 +30,10 @@ services:
       - TZ=${TZ}
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    # Labels para Traefik rotear (adicione isso para o proxy detectar)
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pec.rule=Host(`esus.itagi.agilytech.com`)"  # Seu domínio
+      - "traefik.http.routers.pec.entrypoints=websecure"  # HTTPS
+      - "traefik.http.services.pec.loadbalancer.server.port=80"  # Porta interna do container (ajuste se for 8080)
+      - "traefik.http.routers.pec.tls.certresolver=myresolver"  # SSL auto
