@@ -32,8 +32,9 @@ services:
       - "host.docker.internal:host-gateway"
     # Labels para Traefik rotear (adicione isso para o proxy detectar)
     labels:
-	- "traefik.enable=true"
-	- "traefik.http.routers.pec.rule=Host(`esus.itagi.agilytech.com`)"
-	- "traefik.http.routers.pec.entrypoints=websecure"
-	- "traefik.http.services.pec.loadbalancer.server.port=8080"  # ← Confirme esta porta
-	- "traefik.http.routers.pec.tls.certresolver=myresolver"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pec.rule=Host(`esus.itagi.agilytech.com`)"
+      - "traefik.http.routers.pec.entrypoints=websecure"
+      - "traefik.http.services.pec.loadbalancer.server.port=8080"
+      - "traefik.http.routers.pec.tls.certresolver=myresolver"
