@@ -14,9 +14,9 @@ fi
 echo -e "${GREEN}\n\n*******************"
 echo "Variáveis de ambiente:"
 echo "*******************"
-echo "HTTPS_DOMAIN: ${HTTPS_DOMAIN}"
+echo "HTTPS_DOMAIN: ${HTTPS_DOMAIN} (ignorado - SSL gerenciado pelo proxy reverso)"
 echo "DB_URL: ${DB_URL}"
-echo "DB_USER: ${DB_USER}"  
+echo "DB_USER: ${DB_USER}"
 echo "DB_PASSWORD: ${DB_PASSWORD}"
 echo "JAR_FILENAME: ${JAR_FILENAME}"
 echo "TRAINING: ${TRAINING}"
@@ -25,16 +25,19 @@ echo "*******************\n\n${NC}"
 
 # Verificando variáveis de banco de dados
 if [ -n "$DB_URL" ]; then
-  ARGS="$ARGS -url=${DB_URL}" 
+  ARGS="$ARGS -url=${DB_URL}"
 fi
 
 if [ -n "$DB_USER" ]; then
   ARGS="$ARGS -username=${DB_USER}"
 fi
 
-if [ -n "$DB_PASSWORD" ]; then  
+if [ -n "$DB_PASSWORD" ]; then
   ARGS="$ARGS -password=${DB_PASSWORD}"
 fi
+
+# HTTPS_DOMAIN é ignorado - o SSL deve ser gerenciado pelo proxy reverso (Traefik/Nginx)
+# Não adicionar -cert-domain aos argumentos
 
 # A ser executado java -jar
 echo -e "${GREEN}\n\n*******************"
