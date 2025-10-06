@@ -47,9 +47,6 @@ RUN wget -O ${JAR_FILENAME} https://arquivos.esusab.ufsc.br/PEC/47e59632f06a1ea6
 
 COPY ./install.sh .
 
-# Copiar backups se existirem (não vai falhar se não existirem)
-COPY *.sql /backups/ 2>/dev/null || true
-COPY *.backup /backups/ 2>/dev/null || true
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
