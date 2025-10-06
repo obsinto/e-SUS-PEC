@@ -13,9 +13,7 @@ services:
         - JAR_FILENAME=${JAR_FILENAME}
     stdin_open: true
     tty: true
-    # Remova a seção ports: — não bind no host
     environment:
-      # Vars de runtime limpas (sem duplicatas)
       - SERVICE_FQDN_PEC=${SERVICE_FQDN_PEC}
       - SERVICE_URL_PEC=${SERVICE_URL_PEC}
       - DB_HOST=${DB_HOST}
@@ -27,14 +25,23 @@ services:
       - HTTPS_DOMAIN=${HTTPS_DOMAIN}
       - INSTALL_TYPE=${INSTALL_TYPE}
       - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_HOST=${DB_HOST}
+      - POSTGRES_PORT=${DB_PORT}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASS=${DB_PASSWORD}
+      - JAR_FILENAME=${JAR_FILENAME}
       - TZ=${TZ}
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    # Labels para Traefik rotear (adicione isso para o proxy detectar)
-    labels:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.pec.rule=Host(`esus.itagi.agilytech.com`)"
       - "traefik.http.routers.pec.entrypoints=websecure"
       - "traefik.http.services.pec.loadbalancer.server.port=8080"
       - "traefik.http.routers.pec.tls.certresolver=myresolver"
+    networks:
+      - coolify
+
+networks:
+  coolify:
+    external: true
